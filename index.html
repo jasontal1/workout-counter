@@ -208,12 +208,44 @@
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>3 Workouts Per Week in 2026</h1>
+        <div class="counter-display">
+            <div class="counter-grid">
+                <div class="counter-item">
+                    <div class="counter-number" id="completedCount">0</div>
+                    <div class="counter-label">Completed</div>
+                </div>
+                <div class="counter-item">
+                    <div class="counter-number" id="remainingCount">156</div>
+                    <div class="counter-label">Remaining</div>
+                </div>
+            </div>
+            <div class="total-label" id="totalLabel">of 156 workouts</div>
+        </div>
+        <div class="days-left" id="daysLeft"></div>
+        <div class="week-progress" id="weekProgress"></div>
+        <div class="status" id="status"></div>
+        <div class="button-container">
+            <button class="subtract-btn" onclick="updateCounter(-1)">− 1</button>
+            <button class="add-btn" onclick="updateCounter(1)">+ 1</button>
+            <button class="reset-btn" onclick="resetCounter()">Reset to Start</button>
+        </div>
+        <div class="custom-input-container">
+            <label for="customAmount">Add/Subtract Custom Amount:</label>
+            <div class="input-group">
+                <input type="number" id="customAmount" placeholder="Enter amount...">
+                <button class="apply-btn" onclick="applyCustomAmount()">Apply</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, set, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // TODO: Replace with your Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyDyETEYVvmsQAO8_0pJDuOfvg9YaMR2YZw",
             authDomain: "workout-counter-cfcec.firebaseapp.com",
@@ -228,8 +260,13 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
-        const counterRef = ref(database, 'currentCount');
-        const historyRef = ref(database, 'workoutHistory');
+        const auth = getAuth(app);
+        const counterRef = ref(database, 'workoutCounter');
+
+        // Sign in anonymously immediately
+        signInAnonymously(auth).catch((error) => {
+            console.error('Auth error:', error);
+        });
 
         // Load from Firebase or calculate default
         function calculateTotalWorkouts() {
@@ -262,13 +299,12 @@
 
         window.updateCounter = function(change) {
             counter += change;
-            saveAndDisplay(change);
+            saveAndDisplay();
         }
 
         window.resetCounter = function() {
             counter = calculateTotalWorkouts();
-            set(counterRef, counter);
-            updateDisplay();
+            saveAndDisplay();
         }
 
         window.applyCustomAmount = function() {
@@ -277,27 +313,13 @@
             
             if (!isNaN(amount)) {
                 counter += amount;
-                saveAndDisplay(amount);
+                saveAndDisplay();
                 input.value = '';
             }
         }
 
-        function saveAndDisplay(change) {
-            // Save current count
+        function saveAndDisplay() {
             set(counterRef, counter);
-            
-            // Log the change to history if it's a workout (negative change)
-            if (change < 0) {
-                const timestamp = new Date().toISOString();
-                const historyEntry = ref(database, `workoutHistory/${timestamp.replace(/[:.]/g, '-')}`);
-                set(historyEntry, {
-                    timestamp: timestamp,
-                    remainingCount: counter,
-                    workoutsCompleted: calculateTotalWorkouts() - counter,
-                    change: change
-                });
-            }
-            
             updateDisplay();
         }
 
@@ -355,37 +377,5 @@
             }
         });
     </script>
-    <div class="container">
-        <h1>33 Workouts Per Week in 2026</h1>
-        <div class="counter-display">
-            <div class="counter-grid">
-                <div class="counter-item">
-                    <div class="counter-number" id="completedCount">0</div>
-                    <div class="counter-label">Completed</div>
-                </div>
-                <div class="counter-item">
-                    <div class="counter-number" id="remainingCount">156</div>
-                    <div class="counter-label">Remaining</div>
-                </div>
-            </div>
-            <div class="total-label" id="totalLabel">of 156 workouts</div>
-        </div>
-        <div class="days-left" id="daysLeft"></div>
-        <div class="week-progress" id="weekProgress"></div>
-        <div class="status" id="status"></div>
-        <div class="button-container">
-            <button class="subtract-btn" onclick="updateCounter(-1)">− 1</button>
-            <button class="add-btn" onclick="updateCounter(1)">+ 1</button>
-            <button class="reset-btn" onclick="resetCounter()">Reset to Start</button>
-        </div>
-        <div class="custom-input-container">
-            <label for="customAmount">Add/Subtract Custom Amount:</label>
-            <div class="input-group">
-                <input type="number" id="customAmount" placeholder="Enter amount...">
-                <button class="apply-btn" onclick="applyCustomAmount()">Apply</button>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
