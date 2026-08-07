@@ -224,8 +224,8 @@ padding: 10px;
 </head>
 <body>
 <div class="container">
-<h1>336 Workouts Per Week in 2026</h1>
-
+<h1>3 Workouts Per Week in 2026</h1>
+ 
 <div class="counter-display">
 <div class="counter-grid">
 <div class="counter-item">
@@ -239,17 +239,17 @@ padding: 10px;
 </div>
 <div class="total-label" id="totalLabel">of 156 workouts</div>
 </div>
-
+ 
 <div class="days-left" id="daysLeft"></div>
 <div class="week-progress" id="weekProgress"></div>
 <div class="status" id="status"></div>
-
+ 
 <div class="button-container">
 <button class="subtract-btn" onclick="updateCounter(-1)">− 1</button>
 <button class="add-btn" onclick="updateCounter(1)">+ 1</button>
 <button class="reset-btn" onclick="resetCounter()">Reset to Start</button>
 </div>
-
+ 
 <div class="custom-input-container">
 <label for="customAmount">Add/Subtract Custom Amount:</label>
 <div class="input-group">
@@ -257,7 +257,7 @@ padding: 10px;
 <button class="apply-btn" onclick="applyCustomAmount()">Apply</button>
 </div>
 </div>
-
+ 
 <div class="history-container">
 <h2>Recent Updates</h2>
 <div class="history-list" id="historyList">
@@ -265,13 +265,13 @@ padding: 10px;
 </div>
 </div>
 </div>
-
+ 
 <!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, get, onValue, push, query, orderByChild, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
+ 
 const firebaseConfig = {
 apiKey: "AIzaSyDyETEYVvmsQAO8_0pJDuOfvg9YaMR2YZw",
 authDomain: "workout-counter-cfcec.firebaseapp.com",
@@ -282,19 +282,19 @@ messagingSenderId: "777510447748",
 appId: "1:777510447748:web:daee3641659590d06130d1",
 measurementId: "G-W5WQRD0QCV"
 };
-
+ 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 const counterRef = ref(database, 'workoutCounter');
 const historyRef = ref(database, 'workoutHistory');
-
+ 
 // Sign in anonymously immediately
 signInAnonymously(auth).catch((error) => {
 console.error('Auth error:', error);
 });
-
+ 
 // Load from Firebase or calculate default
 function calculateTotalWorkouts() {
 const startOfYear = new Date(2026, 0, 1);
@@ -302,9 +302,9 @@ const endOfYear = new Date(2026, 11, 31);
 const totalWeeks = Math.ceil((endOfYear - startOfYear) / (1000 * 60 * 60 * 24 * 7));
 return totalWeeks * 3;
 }
-
+ 
 let counter = calculateTotalWorkouts();
-
+ 
 // Listen for changes from Firebase
 onValue(counterRef, (snapshot) => {
 if (snapshot.exists()) {
@@ -312,7 +312,7 @@ counter = snapshot.val();
 updateDisplay();
 }
 });
-
+ 
 // Load initial value
 get(counterRef).then((snapshot) => {
 if (snapshot.exists()) {
@@ -323,7 +323,7 @@ set(counterRef, counter);
 }
 updateDisplay();
 });
-
+ 
 // Listen for history changes and render the recent updates list
 const recentHistoryQuery = query(historyRef, orderByChild('timestamp'), limitToLast(15));
 onValue(recentHistoryQuery, (snapshot) => {
@@ -334,7 +334,7 @@ entries.push(child.val());
 entries.reverse(); // newest first
 renderHistory(entries);
 });
-
+ 
 function renderHistory(entries) {
 const listEl = document.getElementById('historyList');
 if (!entries.length) {
@@ -354,56 +354,58 @@ return `<div class="history-item">
 </div>`;
 }).join('');
 }
-
+ 
 function logHistory(change, type) {
+const now = new Date();
 push(historyRef, {
 change: change,
 type: type || 'update',
 newCounter: counter,
-timestamp: Date.now()
+timestamp: now.toISOString(),
+timestampMs: now.getTime()
 });
 }
-
+ 
 window.updateCounter = function(change) {
 counter += change;
 saveAndDisplay(change, 'update');
 }
-
+ 
 window.resetCounter = function() {
 const previous = counter;
 counter = calculateTotalWorkouts();
 saveAndDisplay(counter - previous, 'reset');
 }
-
+ 
 window.applyCustomAmount = function() {
 const input = document.getElementById('customAmount');
 const amount = parseInt(input.value);
-
+ 
 if (!isNaN(amount)) {
 counter += amount;
 saveAndDisplay(amount, 'update');
 input.value = '';
 }
 }
-
+ 
 function saveAndDisplay(change, type) {
 set(counterRef, counter);
 logHistory(change, type);
 updateDisplay();
 }
-
+ 
 function updateDisplay() {
 const totalWorkouts = calculateTotalWorkouts();
 const completed = totalWorkouts - counter;
 const remaining = counter;
-
+ 
 document.getElementById('completedCount').textContent = completed;
 document.getElementById('remainingCount').textContent = remaining;
 document.getElementById('totalLabel').textContent = `of ${totalWorkouts} workouts`;
-
+ 
 updateDaysLeft();
 }
-
+ 
 function updateDaysLeft() {
 const now = new Date();
 const startOfYear = new Date(2026, 0, 1);
@@ -411,20 +413,20 @@ const endOfYear = new Date(2026, 11, 31, 23, 59, 59);
 const diffTime = endOfYear - now;
 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 const weeksLeft = Math.ceil(diffDays / 7);
-
+ 
 const timeSinceStart = now - startOfYear;
 const daysSinceStart = Math.floor(timeSinceStart / (1000 * 60 * 60 * 24));
 const currentWeek = Math.floor(daysSinceStart / 7) + 1;
 const workoutsShouldHaveDone = currentWeek * 3;
-
+ 
 document.getElementById('daysLeft').textContent = `${weeksLeft} weeks left in 2026`;
 document.getElementById('weekProgress').textContent = `Week ${currentWeek} • Should have completed ${workoutsShouldHaveDone} workouts`;
-
+ 
 const totalWorkouts = calculateTotalWorkouts();
 const workoutsCompleted = totalWorkouts - counter;
 const difference = workoutsCompleted - workoutsShouldHaveDone;
 const statusElement = document.getElementById('status');
-
+ 
 if (difference > 0) {
 statusElement.textContent = `🎉 You're ${difference} workout${difference !== 1 ? 's' : ''} ahead of schedule!`;
 statusElement.className = 'status ahead';
@@ -437,9 +439,9 @@ statusElement.textContent = `✓ You're on schedule Tal!`;
 statusElement.className = 'status ontrack';
 }
 }
-
+ 
 setInterval(updateDaysLeft, 3600000);
-
+ 
 document.getElementById('customAmount').addEventListener('keypress', function(e) {
 if (e.key === 'Enter') {
 applyCustomAmount();
